@@ -23,7 +23,7 @@
 struct adv7611_priv {
 	struct snd_soc_codec	*codec;
 	struct i2c_client		*i2c;
-	struct regmap			*regmap;
+
 };
 
 static struct snd_soc_codec_driver adv7611_codec = {
