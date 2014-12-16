@@ -1,4 +1,3 @@
-/*
  /*
  * Copyright (C) 2014 Vodalys
  * Author: Pablo Anton <pabloantondp@gmail.com>
@@ -19,6 +18,8 @@
 #include <linux/init.h>
 #include <linux/platform_device.h>
 #include <sound/soc.h>
+
+#include "adv7611.h"
 
 struct adv7611_priv {
 	struct snd_soc_codec	*codec;
@@ -105,30 +106,33 @@ static int avd7611_codec_probe(struct platform_device *pdev)
 	int ret;
 	struct adv7611_priv *adv7611;
 
+	TDEBUG("ADV7611 Platform Driver Codec probe");
+
+
 	// Reserve memory for adv7611_priv struct
-	adv7611 = devm_kzalloc(&pdev->dev, sizeof(struct adv7611_priv),
-				      GFP_KERNEL);
+//	adv7611 = devm_kzalloc(&pdev->dev, sizeof(struct adv7611_priv),
+//				      GFP_KERNEL);
+//
+//	// Check error
+//	if (adv7611 == NULL)
+//		return -ENOMEM;
+//
+//	// TODO take client I2C
+//	//adv7611->i2c = pdev->client;
+//
+//	// TODO take regmap
+//	//adv7611->regmap = pdev->regmap;
+//
+//	platform_set_drvdata(pdev, adv7611);
+//
+//	ret = snd_soc_register_codec(&pdev->dev, &adv7611_codec,
+//			adv7611_dai, ARRAY_SIZE(adv7611_dai));
+//	if (ret) {
+//		dev_err(&pdev->dev, "Failed to register codec\n");
+//		return -EINVAL;
+//	}
 
-	// Check error
-	if (adv7611 == NULL)
-		return -ENOMEM;
-
-	// TODO take client I2C
-	//adv7611->i2c = pdev->client;
-
-	// TODO take regmap
-	//adv7611->regmap = pdev->regmap;
-
-	platform_set_drvdata(pdev, adv7611);
-
-	ret = snd_soc_register_codec(&pdev->dev, &adv7611_codec,
-				adv7611_dai, ARRAY_SIZE(adv7611_dai));
-		if (ret) {
-			dev_err(&pdev->dev, "Failed to register codec\n");
-			return -EINVAL;
-		}
-		return ret;
-	return 0;
+	return ret;
 }
 
 
@@ -139,7 +143,7 @@ static int avd7611_codec_remove(struct platform_device *pdev)
 
 static struct platform_driver avd7611_driver = {
 	.driver	= {
-		.name	= "avd7611",
+		.name	= DRV_CODEC_NAME,
 		.owner	= THIS_MODULE,
 	},
 	.probe 	= avd7611_codec_probe,
@@ -148,6 +152,6 @@ static struct platform_driver avd7611_driver = {
 
 module_platform_driver(avd7611_driver);
 
-MODULE_AUTHOR("Pablo Anton <pablo.anton@vodalys-labs.com>);
-MODULE_DESCRIPTION("ADV7611 HDMI Audio Codec");
+MODULE_AUTHOR("Pablo Anton <pablo.antond@vodalys-labs.com");
+MODULE_DESCRIPTION("ADV7611 I2C Audio Driver");
 MODULE_LICENSE("GPL");
