@@ -18,19 +18,25 @@
 #include <linux/init.h>
 #include <linux/platform_device.h>
 #include <sound/soc.h>
+#include <linux/device.h>
+#include "adv7611_codec.h"
 
-#include "adv7611.h"
-
-struct adv7611_priv {
-	struct snd_soc_codec	*codec;
-	struct i2c_client		*i2c;
+struct adv7611_sound_priv {
 
 };
 
-static struct snd_soc_codec_driver adv7611_codec = {
-	/* We can define here
-	.probe				= ,
-	.remove				= ,
+static int adv7611_codec_probe(struct snd_soc_codec * codec){
+
+	dev_dbg(codec->dev, "ADV7611 Audio Codec Driver probe\n");
+
+	return 0;
+}
+
+static struct snd_soc_codec_driver adv7611_audio_codec = {
+	/* We can define here */
+	.probe				= adv7611_codec_probe,
+
+	/*
 	.suspend			= ,
 	.resume				= ,
 	.component_driver	= , // struct snd_soc_component_driver
@@ -82,62 +88,49 @@ static struct snd_soc_dai_ops adv7611_dai_ops = {
 	// Digital Mute
 	.digital_mute	= ,
 	.mute_stream	= ,
-
+*/
 	// ALSA PCM audio operations
-	.startup		= ,
-	.shutdown		= ,
-	.hw_params		= ,
-	.hw_free		= ,
-	.prepare		= ,
-	*/
+	//.startup		= adv7611_codec_dai_startup,
+	//.shutdown		= adv7611_codec_dai_shutdown,
+	//.hw_params		= ,
+	//.hw_free		= ,
+	//.prepare		= ,
+
 };
 
+// DAI (Digital Audio Interface) struct for the codec
 static struct snd_soc_dai_driver adv7611_dai = {
-	.name 	= "adv7611_codec",
-	.ops 	= &adv7611_dai_ops,
+	.name 	= "snd_soc_adv7611",
+	.ops 	= &adv7611_dai_ops, // Operations
 };
 
 
 /*
  *
  */
-static int avd7611_codec_probe(struct platform_device *pdev)
+static int avd7611_codec_dev_probe(struct platform_device *pdev)
 {
-	int ret;
-	struct adv7611_priv *adv7611;
+	struct adv7611_sound_priv *adv7611;
 
-	TDEBUG("ADV7611 Platform Driver Codec probe");
+	printk(KERN_INFO "%s id %d idAuto? %d num resources %d driverOverride %s Dev Init name %s \n", pdev->name,
+			pdev->id, pdev->id_auto, pdev->num_resources, pdev->driver_override, pdev->dev.init_name);
+	//dev_dbg(&pdev->dev, "ADV7611 Platform Driver Codec probe\n");
 
+	// Check good value
+	if (pdev == NULL )
+		return -ENODEV;
 
-	// Reserve memory for adv7611_priv struct
-//	adv7611 = devm_kzalloc(&pdev->dev, sizeof(struct adv7611_priv),
-//				      GFP_KERNEL);
-//
-//	// Check error
-//	if (adv7611 == NULL)
-//		return -ENOMEM;
-//
-//	// TODO take client I2C
-//	//adv7611->i2c = pdev->client;
-//
-//	// TODO take regmap
-//	//adv7611->regmap = pdev->regmap;
-//
-//	platform_set_drvdata(pdev, adv7611);
-//
-//	ret = snd_soc_register_codec(&pdev->dev, &adv7611_codec,
-//			adv7611_dai, ARRAY_SIZE(adv7611_dai));
-//	if (ret) {
-//		dev_err(&pdev->dev, "Failed to register codec\n");
-//		return -EINVAL;
-//	}
-
-	return ret;
+	// Register the codec
+	return snd_soc_register_codec(&pdev->dev,
+			&adv7611_audio_codec,
+			&adv7611_dai,
+			1);
 }
 
 
-static int avd7611_codec_remove(struct platform_device *pdev)
+static int avd7611_codec_dev_remove(struct platform_device *pdev)
 {
+	snd_soc_unregister_codec(&pdev->dev);
 	return 0;
 }
 
@@ -146,12 +139,13 @@ static struct platform_driver avd7611_driver = {
 		.name	= DRV_CODEC_NAME,
 		.owner	= THIS_MODULE,
 	},
-	.probe 	= avd7611_codec_probe,
-	.remove	= avd7611_codec_remove,
+	.probe 	= avd7611_codec_dev_probe,
+	.remove	= avd7611_codec_dev_remove,
 };
 
 module_platform_driver(avd7611_driver);
 
-MODULE_AUTHOR("Pablo Anton <pablo.antond@vodalys-labs.com");
-MODULE_DESCRIPTION("ADV7611 I2C Audio Driver");
+MODULE_AUTHOR("Pablo Anton <pablo.antond@vodalys-labs.com>");
+MODULE_AUTHOR("Jean-Michel Hautbois <jean-michel.hautbois@vodalys.com>");
+MODULE_DESCRIPTION("ADV7611 Audio Codec Driver");
 MODULE_LICENSE("GPL");

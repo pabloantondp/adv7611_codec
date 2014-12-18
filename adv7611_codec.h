@@ -15,7 +15,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADV7611_H_
+#ifndef ADV7611_CODEC_H_
 #define ADV7611_H_
 
 #define DRV_CODEC_NAME 		"adv7611-audio-codec"
@@ -199,4 +199,4 @@
 #define FIFO_NEAR_UFLO_ST
 
 
-#endif /* ADV7611_H_ */
+#endif /* ADV7611_CODEC_H_ */
