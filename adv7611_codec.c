@@ -19,15 +19,39 @@
 #include <linux/platform_device.h>
 #include <sound/soc.h>
 #include <linux/device.h>
+#include <media/adv7604.h>
+
 #include "adv7611_codec.h"
+
 
 struct adv7611_sound_priv {
 
 };
 
+static int adv7611_ops_hw_params(struct snd_pcm_substream * substream,
+		struct snd_pcm_hw_params * hw_params, struct snd_soc_dai * dai){
+
+	dev_info(dai->dev, "ADV7611 Audio Codec Ops hw params\n");
+
+	return 0;
+}
+
+static int adv7611_ops_startup(struct snd_pcm_substream *substream,
+		struct snd_soc_dai * dai){
+	dev_info(dai->dev, "ADV7611 Audio Codec Ops startup\n");
+
+	return 0;
+}
+
+static void adv7611_ops_shutdown(struct snd_pcm_substream * substream,
+		struct snd_soc_dai * dai){
+
+	dev_info(dai->dev, "ADV7611 Audio Codec Ops shutdown\n");
+}
+
 static int adv7611_codec_probe(struct snd_soc_codec * codec){
 
-	dev_dbg(codec->dev, "ADV7611 Audio Codec Driver probe\n");
+	dev_info(codec->dev, "ADV7611 Audio Codec Driver probe\n");
 
 	return 0;
 }
@@ -90,17 +114,29 @@ static struct snd_soc_dai_ops adv7611_dai_ops = {
 	.mute_stream	= ,
 */
 	// ALSA PCM audio operations
-	//.startup		= adv7611_codec_dai_startup,
-	//.shutdown		= adv7611_codec_dai_shutdown,
-	//.hw_params		= ,
+	.startup		= adv7611_ops_startup,
+	.shutdown		= adv7611_ops_shutdown,
+	.hw_params		= adv7611_ops_hw_params,
 	//.hw_free		= ,
 	//.prepare		= ,
 
 };
 
+#define SGTL5000_FORMATS (SNDRV_PCM_FMTBIT_S16_LE |\
+			SNDRV_PCM_FMTBIT_S20_3LE |\
+			SNDRV_PCM_FMTBIT_S24_LE |\
+			SNDRV_PCM_FMTBIT_S32_LE)
+
 // DAI (Digital Audio Interface) struct for the codec
 static struct snd_soc_dai_driver adv7611_dai = {
 	.name 	= "snd_soc_adv7611",
+	.capture = {
+			.stream_name = "HDMI-Capture",
+			.channels_min = 1,
+			.channels_max = 2,
+			.rates = SNDRV_PCM_RATE_8000_48000 | SNDRV_PCM_RATE_96000,
+			.formats = SGTL5000_FORMATS,
+		},
 	.ops 	= &adv7611_dai_ops, // Operations
 };
 
@@ -108,42 +144,46 @@ static struct snd_soc_dai_driver adv7611_dai = {
 /*
  *
  */
-static int avd7611_codec_dev_probe(struct platform_device *pdev)
+static int adv7611_codec_dev_probe(struct platform_device *pdev)
 {
 	struct adv7611_sound_priv *adv7611;
-
-	printk(KERN_INFO "%s id %d idAuto? %d num resources %d driverOverride %s Dev Init name %s \n", pdev->name,
-			pdev->id, pdev->id_auto, pdev->num_resources, pdev->driver_override, pdev->dev.init_name);
-	//dev_dbg(&pdev->dev, "ADV7611 Platform Driver Codec probe\n");
+	int ret;
 
 	// Check good value
 	if (pdev == NULL )
 		return -ENODEV;
 
 	// Register the codec
-	return snd_soc_register_codec(&pdev->dev,
+	ret = snd_soc_register_codec(&pdev->dev,
 			&adv7611_audio_codec,
 			&adv7611_dai,
 			1);
+
+	if (ret)
+		return -ENODEV;
+
+	dev_info(&pdev->dev, "%s register\n", pdev->name);
+
+	return ret;
 }
 
 
-static int avd7611_codec_dev_remove(struct platform_device *pdev)
+static int adv7611_codec_dev_remove(struct platform_device *pdev)
 {
 	snd_soc_unregister_codec(&pdev->dev);
 	return 0;
 }
 
-static struct platform_driver avd7611_driver = {
+static struct platform_driver adv7611_driver = {
 	.driver	= {
 		.name	= DRV_CODEC_NAME,
 		.owner	= THIS_MODULE,
 	},
-	.probe 	= avd7611_codec_dev_probe,
-	.remove	= avd7611_codec_dev_remove,
+	.probe 	= adv7611_codec_dev_probe,
+	.remove	= adv7611_codec_dev_remove,
 };
 
-module_platform_driver(avd7611_driver);
+module_platform_driver(adv7611_driver);
 
 MODULE_AUTHOR("Pablo Anton <pablo.antond@vodalys-labs.com>");
 MODULE_AUTHOR("Jean-Michel Hautbois <jean-michel.hautbois@vodalys.com>");
